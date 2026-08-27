@@ -92,6 +92,7 @@ r_obj* str_unserialise_unicode(r_obj* r_string) {
         char* tmp = (orig_len + 1 <= (int) sizeof(stack_buf))
             ? stack_buf
             : (char*) R_alloc(orig_len + 1, sizeof(char));
+        r_memcpy(tmp, re_enc, orig_len + 1);
         return unescape_char_to_sexp(tmp);
     } else {
         // The string has been copied so it's safe to use as buffer
