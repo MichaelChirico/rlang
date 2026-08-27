@@ -69,7 +69,6 @@ r_obj* names_as_unique(r_obj* names, bool quiet) {
         buf[0] = '\0';
 
         r_memcpy(buf, name, size);
-
         int remaining = size + MAX_IOTA_SIZE - size;
 
         int needed = snprintf(buf + size, remaining, "...%" R_PRI_SSIZE, i + 1);
