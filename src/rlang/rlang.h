@@ -21,30 +21,25 @@
 
 #define R_NO_REMAP
 
-#include <stdbool.h> // IWYU pragma: export
-#include <Rinternals.h> // IWYU pragma: export
-#include <Rversion.h> // IWYU pragma: export
+#include <stdbool.h>     // IWYU pragma: export
+#include <Rinternals.h>  // IWYU pragma: export
+#include <Rversion.h>    // IWYU pragma: export
 #include "rlang-types.h" // IWYU pragma: export
-
 
 r_obj* r_init_library(r_obj* ns);
 
 r_ssize r_arg_as_ssize(r_obj* n, const char* arg);
 
-static inline
-r_ssize r_as_ssize(r_obj* n) {
-  return r_arg_as_ssize(n, "n");
+static inline r_ssize r_as_ssize(r_obj* n) {
+    return r_arg_as_ssize(n, "n");
 }
 
-extern
-bool _r_use_local_precious_list;
-
+extern bool _r_use_local_precious_list;
 
 // IWYU pragma: begin_exports
 #include "obj.h"
 #include "globals.h"
 
-#include "altrep.h"
 #include "arg.h"
 #include "attrib.h"
 #include "debug.h"
@@ -55,6 +50,7 @@ bool _r_use_local_precious_list;
 #include "df.h"
 #include "dyn-array.h"
 #include "dyn-list-of.h"
+#include "dots-info.h"
 #include "env.h"
 #include "env-binding.h"
 #include "eval.h"
@@ -75,9 +71,7 @@ bool _r_use_local_precious_list;
 #include "walk.h"
 // IWYU pragma: end_exports
 
-
-#define r_abort_lazy_call(LAZY, ...) \
-  r_abort_call(KEEP(r_lazy_eval(LAZY)), __VA_ARGS__)
-
+#define r_abort_lazy_call(LAZY, ...)                                           \
+    r_abort_call(KEEP(r_lazy_eval(LAZY)), __VA_ARGS__)
 
 #endif

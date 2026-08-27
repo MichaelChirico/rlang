@@ -432,7 +432,7 @@ NULL
 #' @seealso
 #' - `r link("topic_inject")`
 #'
-#' @examples
+#' @examplesIf is_installed("glue")
 #' g <- function(var) englue("{{ var }}")
 #' g(cyl)
 #' g(1 + 1)
@@ -455,6 +455,7 @@ englue <- function(
 }
 
 glue_embrace <- function(text, env = caller_env()) {
+  check_installed("glue", "to use the glue syntax in names.")
   out <- glue_first_pass(text, env = env)
   out <- unstructure(glue::glue(out, .envir = env))
 
@@ -513,7 +514,6 @@ glue_first_pass_eval <- function(text, env) {
 #' inside a function. This is useful for learning about injection and
 #' for debugging injection code.
 #'
-#' @usage NULL
 #' @param expr An expression involving [injection
 #'   operators][topic-inject].
 #'

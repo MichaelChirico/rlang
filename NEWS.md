@@ -1,7 +1,49 @@
 # rlang (development version)
 
+* Fixed a use-after-free that could corrupt the result of `expr()` and other injection functions when `!!` injection required an operator precedence fixup of the AST and a garbage collection occurred during injection (#1910).
+
+* Fixed backtrace links for `file://` URLs in srcrefs.
+
+* Backtraces no longer emit file hyperlinks for source files that don't exist on disk, such as the `R CMD INSTALL` staging directory recorded when a package is installed kept srcrefs. The location is shown as plain text instead (#1908).
+
+# rlang 1.3.0
+
+* `hash()` now uses its own walking strategy to make it independent of pecularities of the R serialiser. This fixes stability issues with function bytecode and shrinkable vectors on R 4.6.0 (#1681).
+
+  This does mean that with this version all hash values will now be different. In general we gain stability across versions of R, but may lose some stability across versions of rlang. We'll try and avoid changes to our hash algorithm for the sake of stability but you should assume it's always possible for a new version to invalidate existing hashes.
+
+* Fixed `env_get()` issue causing double evaluation of active bindings on older R versions <= 4.4 (#1893).
+
+# rlang 1.2.0
+
+* rlang and tidyeval are now fully backed by official C APIs of R!
+  Thanks to the R core team for collaborating with us on this.
+
+* `ns_registry_env()` is defunct in R >= 4.6.0 for compliance with the C API of R.
+
+* New type-checking functions exported from rlang: `check_bool()`,
+  `check_string()`, `check_number_decimal()`,
+  `check_number_whole()`, and `check_data_frame()`. These were
+  previously only available via the `standalone-types-check.R`
+  standalone file. `stop_input_type()` is also now exported.
+
+* Fixed a protection issue discovered by rchk (#1865).
+
+
+# rlang 1.1.7
+
+* Progress towards making rlang conformant with the public C API of R.
+
+* R >=4.0.0 is now required. This is still more permissive than the general tidyverse policy of supporting the [5 most recent versions of R](https://tidyverse.org/blog/2019/04/r-version-support/).
+
+* `list2()` is now a little faster (#1837).
+
+* New `%&&%` operator that returns RHS when LHS is non-NULL (#1774, @snystrom).
+
 * C code no longer calls `memcpy()` and `memset()` on 0-length R object memory
   (#1797).
+* `is_syntactic_literal()` returns `FALSE` for objects with attributes, such as `array(1)` or `factor("x")` (#1817, @jonthegeek).
+* `is_syntactic_literal()` returns `FALSE` for negative numbers and complex numbers with negative imaginary components (#1799, @jonthegeek).
 
 
 # rlang 1.1.6
