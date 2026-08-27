@@ -312,6 +312,8 @@ test_that("anonymous calls are stripped from backtraces", {
 })
 
 test_that("collapsing of eval() frames detects when error occurs within eval()", {
+  skip_if_not_installed("base", "4.5")
+
   e <- NULL
   trace <- NULL
 
@@ -328,12 +330,7 @@ test_that("collapsing of eval() frames detects when error occurs within eval()",
     error = function(err) trace <<- trace_back(e)
   ))
 
-  if (getRversion() >= "4.5") {
-    variant <- "4.5_and_older"
-  } else {
-    variant <- "old"
-  }
-  expect_snapshot_trace(trace, variant = variant)
+  expect_snapshot_trace(trace)
 })
 
 test_that("can print degenerate backtraces", {
@@ -566,9 +563,6 @@ test_that("can bind backtraces", {
 })
 
 test_that("backtraces don't contain inlined objects (#1069, r-lib/testthat#1223)", {
-  # !! deparsing in older R
-  skip_if_not_installed("base", "3.5.0")
-
   local_options(
     rlang_trace_format_srcrefs = FALSE
   )
@@ -649,14 +643,17 @@ test_that("can format empty traces", {
 })
 
 test_that("backtrace is formatted with sources (#1396)", {
-  file <- tempfile("my_source", fileext = ".R")
-  with_srcref(
-    file = file,
-    "
-    f <- function() g()
-    g <- function() abort('foo')
-  "
+  # Keep the file on disk during `format()` so a live hyperlink is emitted.
+  # A hyperlink to a missing file is now suppressed (#1908).
+  file <- withr::local_tempfile(
+    pattern = "my_source",
+    lines = c(
+      "f <- function() g()",
+      "g <- function() abort('foo')"
+    ),
+    fileext = ".R"
   )
+  source(file, local = environment(), keep.source = TRUE)
   err <- catch_cnd(f(), "error")
 
   rlang_cli_local_hyperlinks()
@@ -664,6 +661,46 @@ test_that("backtrace is formatted with sources (#1396)", {
   lines <- format(err$trace)
   n_links <- sum(grepl("\033]8;.*my_source.*\\.R:", lines))
   expect_true(n_links > 0)
+})
+
+test_that("src_loc() emits plain text for missing files (#1908)", {
+  rlang_cli_local_hyperlinks()
+
+  srcfile <- srcfilecopy("/does/not/exist.R", "x <- 1")
+  srcref <- srcref(srcfile, c(1L, 1L, 1L, 6L, 1L, 6L))
+
+  expect_no_match(src_loc(srcref), "\033]8;", fixed = TRUE)
+  expect_match(src_loc(srcref), "exist\\.R:1:1")
+})
+
+test_that("src_loc() hyperlinks files sourced from another directory (#1908)", {
+  rlang_cli_local_hyperlinks()
+
+  dir <- withr::local_tempdir()
+  writeLines("f <- function() abort('foo')", file.path(dir, "code.R"))
+
+  env <- env()
+  withr::with_dir(dir, source("code.R", local = env, keep.source = TRUE))
+
+  # `srcfile$filename` is the relative "code.R", parsed from `dir`. Now that
+  # we're back in testthat's directory, resolution must use `srcfile$wd` for
+  # the link to point at the real file.
+  expect_match(src_loc(attr(env$f, "srcref")), "\033]8;", fixed = TRUE)
+})
+
+test_that("src_loc() decodes file:// URL filenames", {
+  rlang_cli_local_hyperlinks()
+
+  file <- withr::local_tempfile(fileext = ".R", lines = "x <- 1")
+  url <- paste0("file://", normalizePath(file))
+
+  srcfile <- srcfilecopy(url, "x <- 1")
+  srcref <- srcref(srcfile, c(1L, 1L, 1L, 6L, 1L, 6L))
+
+  # A `file://` URL filename must be decoded to a real path so the file is
+  # found and the link points at it, not `file://file:///...`.
+  expect_match(src_loc(srcref), "\033]8;", fixed = TRUE)
+  expect_no_match(src_loc(srcref), "file://file:", fixed = TRUE)
 })
 
 test_that("sibling streaks in tree backtraces", {
