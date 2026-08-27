@@ -62,6 +62,7 @@ r_obj* names_as_unique(r_obj* names, bool quiet) {
         const char* name = r_str_c_string(elt);
 
         int size = strlen(name);
+        int buf_size = size + MAX_IOTA_SIZE;
         char stack_buf[256];
         char* buf = (buf_size <= (int) sizeof(stack_buf))
             ? stack_buf
